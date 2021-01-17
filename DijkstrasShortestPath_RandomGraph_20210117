@@ -1,0 +1,705 @@
+/******************************************************************************
+
+THIS PROGRAM CREATES A GRAPH AND COMPUTES DIJKSTRA's SHORTEST PATH USING SINGLY LINKED LISTS
+
+*******************************************************************************/
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <bits/stdc++.h>
+#include <time.h>
+#include <cstdlib>
+#include <ctime>
+#include <limits>
+
+using namespace std;
+
+//Class for saving the distances of the vertices:
+class list_i_NodeDist
+{
+public:
+  //    list_i_NodeDist(): i_nodeID(0), i_Dist(0) {};// constructor for list
+  int i_nodeID;
+  int i_Dist;
+  list_i_NodeDist *next;		//*next = value of next list element
+
+};
+
+//Class for all remaining START vertices which need to be observed:
+class list_i_QVertSet
+{
+public:
+  //list_class(std::initializer_list<int> init): i_vElemVertID(init), i_vVertDistFromStrt(init) {};// constructor for list
+  int i_nodeID;
+  list_i_QVertSet *next;	//*next = value of next list element
+
+};
+
+// Function of list_i_NodeDist to find an i-th vertex' distance:
+inline int
+list_i_NodeDist_getIthDist (list_i_NodeDist * head, int index)
+{
+  //set current pointer back to the head pointer
+  int i_cnt = 0;
+  list_i_NodeDist *elem_cur = head;
+
+  // as long as elem address is not emptty
+  while (elem_cur != NULL)
+    {
+      //cout << "\n INDEX =" << index;
+      //cout << "\nWHILE i=" << i_cnt;
+      //cout << "\nNODE ID =" << elem_cur->i_nodeID;
+      //until we found the element
+      if ((i_cnt == index) && ((elem_cur->i_nodeID) == index))
+	{
+	  //cout << ", if i=" << i_cnt;
+	  //if element found...
+	  // give back the "data" attributes of the structure to which elem points
+	  return elem_cur->i_Dist;
+	}
+
+      i_cnt++;
+      elem_cur = elem_cur->next;
+    }
+
+  //assert (0);
+
+}
+
+// Function to get node ID of element "index" - default output is "9999" (in case element not found)
+inline int i_getItem_list_i_QVertSet (list_i_QVertSet * headQ, int index)
+{
+  //set current pointer back to the head pointer
+  int i_cnt = 0, i_TempID = 9999;
+  list_i_QVertSet *elem_cur = headQ;
+
+  // as long as elem address is not emptty
+  while (elem_cur != NULL && i_TempID == 9999)
+    {
+      //cout << "\ngetItem - INDEX =" << index;
+      //cout << "\ngetItem - WHILE i=" << i_cnt;
+      //cout << "\ngetItem - NODE ID =" << elem_cur->i_nodeID;
+      //until we found the element
+      if ((elem_cur->i_nodeID) == index)
+	{
+	  //cout << ", found node ID! i=" << i_cnt;
+	  //if element found...
+	  // give back the "data" attributes of the structure to which elem points
+	  i_TempID = elem_cur->i_nodeID;
+	  //return i_TempID;
+	}
+
+      i_cnt++;
+      elem_cur = elem_cur->next;
+    }
+
+return i_TempID;    
+  //assert (0);
+}
+
+//Function checks if start vertex list is empty or not:
+inline bool
+b_isNotEmpty_list_i_QVertSet (list_i_QVertSet * headQ)
+{
+  //set current pointer back to the head pointer
+  int i_cnt = 0;
+  bool b_IsNotEmpty = false;
+  list_i_QVertSet *elem_cur = headQ;
+
+  // as long as elem address is not emptty
+  while (elem_cur != NULL)
+    {
+    //cout << "\nIsEmpty - WHILE i=" << i_cnt;
+    //until we found the element
+    
+    
+    elem_cur = elem_cur->next;
+    
+    if (elem_cur!=NULL)
+	{
+	  //cout << ", IS NOT EMPTY!" << i_cnt;
+	  //if element found...
+	  b_IsNotEmpty = true;
+	}
+	
+      i_cnt++;
+    }
+    //cout << "\nIs Empty: i_cnt: " << i_cnt <<"\n";
+    //assert (0);
+    return b_IsNotEmpty;
+   
+}
+
+
+// Functio of list_i_NodeDist to save the i-th vertex's distance:
+inline int
+list_i_NodeDist_saveIthDist (list_i_NodeDist * head, int index, int i_DistEndSavd)
+{
+  //set current pointer back to the head pointer
+  int i_cnt = 0;
+  list_i_NodeDist *elem_cur = head;
+
+  // as long as elem address is not emptty
+  while (elem_cur != NULL)
+    {
+      //until we found the element
+      if ((i_cnt == index) && ((elem_cur->i_nodeID) == index))
+	{
+
+	  //if element found...
+	  // SAVE the "data" attributes of the structure to which elem points
+	  elem_cur->i_Dist = i_DistEndSavd;
+	}
+
+      i_cnt++;
+      elem_cur = elem_cur->next;
+    }
+
+  //assert (0);
+
+}
+
+// Function prepends 1 element to list_i_NodeDist:
+void
+prepend_list_i_NodeDist (list_i_NodeDist ** head_ref, int new_i_nodeID, int new_i_Dist)
+{
+  /* 1. allocate NEW node = create new list_elem */
+  list_i_NodeDist *new_node = new list_i_NodeDist ();
+
+  /* 2. assign the handed-over "new_data" value to attribute "data" of the new element */
+  new_node->i_nodeID = new_i_nodeID;
+  new_node->i_Dist = new_i_Dist;
+
+  /* 3. Dereference the head pointer to next element in list */
+  new_node->next = (*head_ref);
+
+  /* 4. value "new_node" is where the head points to move the head to point to the new node */
+  (*head_ref) = new_node;
+}
+
+//Function appends 1 element to list_i_NodeDist:
+void
+append_list_i_NodeDist (list_i_NodeDist ** head_ref, int new_i_nodeID, int new_i_Dist)
+{
+  /* 1. allocate NEW node = create new list_elem */
+  list_i_NodeDist *new_node = new list_i_NodeDist ();
+
+  //necessary for last step:
+  list_i_NodeDist *last = *head_ref;
+
+  /* 2. assign the handed-over "new_data" value to attribute "data" of the new element */
+  new_node->i_nodeID = new_i_nodeID;
+  new_node->i_Dist = new_i_Dist;
+
+  // 3. This new node is going to be   
+  // the last node --> needs to be made NULL for concluding list: 
+  new_node->next = NULL;
+
+  // 4. If the Linked List is empty,  
+  // then make the new node as head  
+  if (*head_ref == NULL)
+    {
+      *head_ref = new_node;
+      return;
+    }
+
+  // 5. Else traverse till the last node  
+  while (last->next != NULL)
+    last = last->next;
+
+  // 6. Change the next of last node  
+  last->next = new_node;
+  return;
+}
+
+//Function appends 1 element to list_i_QVertSet:
+void
+append_list_i_QVertSet (list_i_QVertSet ** headQ, int new_i_nodeID)
+{
+  /* 1. allocate NEW node = create new list_elem */
+  list_i_QVertSet *new_node = new list_i_QVertSet ();
+
+  //necessary for last step:
+  list_i_QVertSet *last = *headQ;
+
+  /* 2. assign the handed-over "new_data" value to attribute "data" of the new element */
+  new_node->i_nodeID = new_i_nodeID;
+
+  // 3. This new node is going to be   
+  // the last node --> needs to be made NULL for concluding list: 
+  new_node->next = NULL;
+
+  // 4. If the Linked List is empty,  
+  // then make the new node as head  
+  if (*headQ == NULL)
+    {
+      *headQ = new_node;
+      return;
+    }
+
+  // 5. Else traverse till the last node  
+  while (last->next != NULL)
+    last = last->next;
+
+  // 6. Change the next of last node  
+  last->next = new_node;
+  return;
+}
+
+//Function REMOVES 1 element to list_i_QVertSet:
+void
+remove_list_i_QVertSet (list_i_QVertSet * headQ, int n_temp)
+{
+
+  list_i_QVertSet *prev = headQ;
+  list_i_QVertSet *current = headQ;
+  //int i_cnt = 0;
+  //cout << "Starting removal function.";
+
+  while (current != nullptr && current != NULL)
+    {
+      if (current->i_nodeID == n_temp)
+	{
+	  //value found, abort while
+	  //cout << " Found node " << n_temp;
+	  break;
+	}
+      else
+	{
+	  //special treatment for first step:
+	  if(current!=prev){
+	      prev = current;
+	  }
+	  //go to next value
+	  //cout << ", checked node ID:" << current->i_nodeID;
+	  current = current->next;
+	}
+    }
+
+  if (current == nullptr || current == NULL)
+    {
+      //cout << "End of list reached, no match found.";
+    }
+  else
+    {
+      //cout << "Deleting i_nodeID=" << current->i_nodeID;
+      prev->next = current->next;
+      delete current;
+    }
+
+}
+
+
+// This function prints contents of 
+// linked list starting from head 
+void
+printlist_i_NodeDist (list_i_NodeDist * elem)
+{
+  // as long as elem address is not emptty
+  while (elem != NULL)
+    {
+      // print out the "data" attribute of the structure to which elem points
+      cout << "->" << elem->i_nodeID;
+      // reassign the NEXT element in the row to elem
+      elem = elem->next;
+    }
+}
+
+// This function prints contents of 
+// linked list starting from head 
+void
+print_list_i_QVertSet (list_i_QVertSet * elem)
+{
+  // as long as elem address is not emptty
+  while (elem != NULL)
+    {
+      // print out the "data" attribute of the structure to which elem points
+      cout << "->" << elem->i_nodeID;
+      // reassign the NEXT element in the row to elem
+      elem = elem->next;
+    }
+}
+
+
+
+// This function reads-in the parameters/arguments necessary for building the graph.
+// ATTENTION!!! The function is going to modify the input arguments --> making them outputs 
+inline void
+graph_params (int &i_NodCnt, float &f_EdgDns, int &i_DistMin, int &i_DistMax)
+{
+
+
+  // Default parameters usage mechanism:
+
+  //Initialize strings
+  string s_DefltPrms = "", s_No = "n", s_Yes = "y";
+
+  cout <<
+    "GRAPH CREATION SCRIPT\n\nDo you want to use default parameters? (y/n)";
+
+  // Read-in input until correct input was given:
+  while (s_DefltPrms.compare (s_No) != 0 && s_DefltPrms.compare (s_Yes) != 0)
+    {
+      cin >> s_DefltPrms;
+
+      // Check if input is y or n - s_DefltPrms.compare(s_No)!=0 in case both strings are equal
+      if (s_DefltPrms.compare (s_No) != 0 && s_DefltPrms.compare (s_Yes) != 0)
+	{
+	  cout <<
+	    "Wrong input. \nDo you want to use default parameters? (y/n)";
+	}
+    }
+
+  if (s_DefltPrms.compare (s_No) == 0)
+    {
+
+      //Breakpoint
+      cout << "No-branch start";
+
+      //read-in node count
+      cout << "\n\nNode count (int 10...100): ";
+      cin >> i_NodCnt;
+      if (i_NodCnt < 10 || i_NodCnt > 100)
+	{
+	  i_NodCnt = 10;
+	  cout << "\nNode count forced =10 due to invalid user input.";
+	}
+
+      //read-in edge density
+      cout << "\n\nEdge density (float 0.1...1): ";
+      cin >> f_EdgDns;
+      if (f_EdgDns < 0.1 || f_EdgDns > 1.0)
+	{
+	  f_EdgDns = 0.5;
+	  cout << "\nNode count forced =0.5 due to invalid user input.";
+	}
+      //read-in distance range
+      cout << "\n\nMinimum distance (int 1...10): ";
+      cin >> i_DistMin;
+      cout <<
+	"\nMaximum distance (int 2...11 AND larger than minimum distance): ";
+      cin >> i_DistMax;
+      if ((i_DistMax < 2 || i_DistMax > 11)
+	  || (i_DistMin < 1 || i_DistMin > 10) || i_DistMax <= i_DistMin)
+	{
+	  i_DistMin = 1;
+	  i_DistMax = 5;
+	  cout <<
+	    "\nMinimum distance =1 and maximum distance=5 due to invalid user input.";
+	}
+
+      //Breakpoint
+      cout << "No-branch end";
+    }
+  else if (s_DefltPrms.compare (s_Yes) == 0)
+    {
+
+      //Breakpoint
+      //cout<< "yes-branch start";
+      //assign default values as desired by user:
+        // int i_NodCnt=50, f_EdgDns=0.1, i_DistMin=1, i_DistMax=10; --> is placed into if-statements
+      i_NodCnt = 50, f_EdgDns = 0.05, i_DistMin = 1, i_DistMax = 10;
+
+      //Breakpoint
+      //cout<< "yes-branch end";
+    }
+
+  //return i_NodCnt, f_EdgDns, i_DistMin, i_DistMax;
+}
+
+// Function returns if an edge should be created or not, based on the user-chosen edge density value
+inline bool
+CreateOrNot (float &f_EdgDns)
+{
+  float f_rand = 0;
+  //srand ( time(NULL) );
+  
+  f_rand = rand () % 100;
+  //cout<<"\n f_rand: "<<f_rand;
+  bool TrueFalse = f_rand < (f_EdgDns * 100);
+}
+
+
+int
+main ()
+{
+
+  //GRAPH PARAMETERS READ-IN
+  //read-in graph parameters:
+  int i_NodCnt = 0, i_DistMin = 0, i_DistMax = 0;
+  float f_EdgDns = 0.0;
+
+  graph_params (i_NodCnt, f_EdgDns, i_DistMin, i_DistMax);
+
+  //These are the graph parameters used:
+  cout << "\n Used parameters: ";
+  cout << "\n Node count: " << i_NodCnt << ".";
+  cout << "\n Edge density: " << f_EdgDns << ".";
+  cout << "\n Distance range: " << i_DistMin << "..." << i_DistMax << ".";
+
+
+
+  //EDGE-GENERATION ALGORITHM
+  int edges[i_NodCnt][i_NodCnt], i_EdgDist[i_NodCnt][i_NodCnt];
+  bool b_CreateEdge;
+
+  cout <<
+    "\n\n**************************************\nEDGE-GENERATION.\nExisting edges:";
+
+    //Idea: 2-folded for-loop through all vertices in order to loop through all possible combinations of points
+    // for each tuple, throw a dice. If dice value (random probability) is < density --> create edge
+
+    //Starting random number generator for random edge length generation:
+    //srand has to be performed once in the beginning, it is the seed for later rand() calls --> which then are going to deliver pseudo-random numbers
+    srand((unsigned) time(0));
+
+    //edge loop, outer: i is the start vertex
+    for (int i = 0; i < i_NodCnt; i++)
+    {
+      //j is the end vertex
+      for (int j = 0; j < i_NodCnt; ++j)
+        {
+
+    	  //i==j: vertex is identical --> no edge possible
+    	  if (i == j)
+    	    {
+    	      edges[i][j] = false;
+    	    }
+    	  else
+    	    {
+                //throw dice if or not to save an edge here
+                b_CreateEdge = (rand () % 100) < (f_EdgDns * 100);
+    	      
+                if (b_CreateEdge)
+                {
+                    
+                    //mark true that an edge is generated for this start/end combination:
+                    edges[i][j] = edges[j][i] = true;
+                    
+                    //Randomly generate an edge length:
+                    i_EdgDist[i][j] = i_EdgDist[j][i] = (rand () % i_DistMax) + i_DistMin;
+                    
+                    //Print edge number and length:
+                    cout << "\nEdge: " << i << "-" << j << ", edge length: " << i_EdgDist[i][j];
+
+                }
+                  else
+                {
+                    edges[i][j] = edges[j][i] = false;
+                }
+    	    }
+        }
+    }
+  std::cin.get ();
+  cout << "\n************************************";
+
+
+
+  //save start-to-VERTEX distances
+
+  cout << "\n\nDijkstra's Algorithm - saving new min distances";
+
+
+  ////INITIALIZE list_i_NodeDist (VERTEX DISTANCE LIST)
+  //Create 1st list element of class "list_elem", and let the head pointer point to NULL
+  //list_i_NodeDist= shortest path set = This list contains all vertices' distances from start node "0"
+  list_i_NodeDist *head = NULL;
+  list_i_QVertSet *headQ = NULL;
+
+  int new_i_nodeID, new_i_Dist;
+
+
+  // Prepend the determined amount of nodes to list:
+  //cout << "\n *** list initialization is: ***";
+  for (int i = 0; i < i_NodCnt; i++)
+    {
+      //node initialization values
+      if (i == 0)
+	{
+	  //start node - value = 0
+	  new_i_Dist = 0;
+	}
+      else
+	{
+	  // all other nodes -> value is 9999
+	  new_i_Dist = 9999;
+	}
+
+      //cout<<i;
+      append_list_i_NodeDist (&head, i, new_i_Dist);
+      append_list_i_QVertSet (&headQ, i);
+      //cout<<"\n Node no: " << i << ", distance saved: "<< list_i_NodeDist_getIthDist(headQ, i);
+      //initialize the shortest path set bool list:
+
+    }
+
+
+  //SAVE VERTEX DISTANCE to list, but ONLY if the currently observed cost is less than what has been saved before.
+  //loop vertices which are currently still in the "to do" list, i.e. which haven't been observed yet
+  int i_StrtVtx = 9999, i_DistStrt=0, i_DistTemp, i = 0, i_DistEnd=0;
+  int i_QNodeID =0, i_QTempNodeID = 0, i_DistEndCurEdg = 0, i_DistEndSavd =0, i_LastDelNode = -1;
+  bool b_Start = true, b_AnyStrtVrtxLeft=true;
+
+  //i_QTempNodeID=i_getItem_list_i_QVertSet(headQ, 10);
+  //cout << "\nNode ID is:" << i_QTempNodeID;
+
+ //DISTANCE ASSESSMENT AND UPDATING MECHANISM:
+ //while loop until no elements in QVertSet anymore --> go through all start vertices until there's no start vertex anymore
+ //i_DistStrt==9999 would be the end of the while loop because that's when no unseen start vertex is there anymore 
+  while (b_AnyStrtVrtxLeft && i_DistStrt!=9999)
+    {
+      //std::cin.get ();
+      //cout << "\nwhile start - looking for vertex with minimum distance";
+      i = 0;
+      i_DistStrt = 9999;
+      i_DistTemp=9999;
+
+      //find out vertex with minimum distance:
+      while (b_AnyStrtVrtxLeft && i < i_NodCnt){
+    	  //cout << "\ninner while loop - checking vertex of index i=" << i;
+    
+    	  //get node ID of next vertex in "to do list":
+    	  i_QTempNodeID = i_getItem_list_i_QVertSet (headQ, i);
+    	  //cout << "\ni_QTempNodeID=" << i_QTempNodeID;
+    	  
+    	  //if vertex ID was not found - value corresponds to 9999
+    	  //if vertex ID exists -> check its distance is less than current minimum
+    	  if (i_QTempNodeID != 9999)
+    	    {
+        	      //vertex ID was found - copy it
+        	      i_QNodeID = i_QTempNodeID;
+        	      //cout << "Vertex ID " << i_QNodeID << " found";
+        
+        	      if (b_Start == true && i_QNodeID == 0)
+            		{
+            		  //for vertex ID=0    
+            		  //cout << ", Node id:" << i_QNodeID; 
+            		  //using that node ID, read-out its distance:
+            		  i_DistTemp = list_i_NodeDist_getIthDist (head, i_QNodeID);
+            		  cout << ", dist=" << i_DistTemp;
+            
+            		  //in case current vertex's distance is the new minimum, save it and save the vertex ID:
+            		  if (i_DistTemp < i_DistStrt)
+            		    {
+            		      //Update current minimium distance and start vertex ID:
+            		      i_DistStrt = i_DistTemp;
+            		      i_StrtVtx = i_QNodeID;
+            		      //cout << ", SAVED info: Min Node= " << i_StrtVtx << ", min dist=" << i_DistStrt;
+            		      cout << ", SAVED";
+            		      b_Start = false;
+            		    }
+            		}
+            	      else
+            		{
+            		  //vertex ID!=0:
+            		  //in case current vertex's distance is the new minimum, save it and save the vertex ID:
+                      //using that node ID, read-out its distance:
+            		  i_DistTemp = list_i_NodeDist_getIthDist (head, i_QNodeID);
+            		  //cout << ", dist=" << i_DistTemp;
+            		  
+            		  if (i_DistTemp < i_DistStrt && i_DistTemp > 0)
+            		    {
+            		      //Update current minimium distance and start vertex ID:
+            		      i_DistStrt = i_DistTemp;
+            		      i_StrtVtx = i_QNodeID;
+            		      //cout << ", SAVED: Min vtx" << i_StrtVtx << ", d=" <<
+            			i_DistStrt;
+            		    }  
+            		  
+    
+    		        }
+    
+    
+    	    }
+    	  else
+    	    {
+    	      //cout << "\nVertex ID " << i << " not in list.";
+    	    }
+    
+    	  ++i;
+        }
+      //at this point the algo found out the start vertex (and thus the minimum distance)
+
+
+          //Safety check: node has NOT been deleted yet
+        if ((i_LastDelNode != i_StrtVtx) || (i_LastDelNode == -1))
+        {
+    	  //remove that min dist vertex from "rest"-list:
+    	  remove_list_i_QVertSet (headQ, i_StrtVtx);
+    	  //if node=0 -> head-Pointer needs to be moved.
+    	  if(i_StrtVtx==0){
+    	      headQ=headQ->next;
+    	  }
+    	  
+    	  //deleted node = start vertex
+    	  i_LastDelNode = i_StrtVtx;
+    	  //cout << "\nLast deleted node:" << i_StrtVtx;
+    
+    	  cout << "\n\nStart: " << i_StrtVtx;
+    
+    	  // i_StrtVtx is the start vertex
+    	  // start vertex: look up its distance --> basis for cost of END vertex
+    	  //evaluate distance for all vertices i>0
+    	  for (int j = 0; j < i_NodCnt; ++j)
+    	    {
+    	      //j is the end vertex
+    	      //if edge is existing, then check if current cost smaller than minimum cost FOR THIS VERTEX
+    	      //current distance = start distance + edge distance i->j
+    
+        	      if ((edges[i_StrtVtx][j] == true))
+        		{
+        		  cout << "\n\t| END: " << j;
+        
+        		  //compute CURRENT EDGE'S distance to this point
+        		  i_DistEndCurEdg = i_DistStrt + i_EdgDist[i_StrtVtx][j];
+        		  cout << ", start dist:" << i_DistStrt << ", edge length: " << i_EdgDist[i_StrtVtx][j] << "edge dist:" <<i_DistEndCurEdg;
+        
+        		  //read-out the vertex's previously saved cost:
+        		  i_DistEndSavd = list_i_NodeDist_getIthDist (head, j);
+        		  //cout << ", previous distance: " << i_DistEndSavd;
+        
+        		  //Only save that current edge's distance to the vertex IN CASE smaller than the distance already saved in the memory before:
+        		  if ((i_DistEndCurEdg < i_DistEndSavd)
+        		      || (i_DistEndSavd == 9999))
+        		    {
+        
+        		      //Update the distance which is being saved:
+        		      i_DistEndSavd = i_DistEndCurEdg;
+        		      //cout << ", starting save of current distance: " << i_DistEndSavd;
+        
+        		      //save updated distance:
+        		      list_i_NodeDist_saveIthDist (head, j, i_DistEndSavd);
+        
+        		      //check if saving was successful:
+        		      if (list_i_NodeDist_getIthDist (head, j) == i_DistEndSavd)
+            			{
+            			  //    cout <<"\nUpdating vertex " << j << "distance SUCCESSFUL. New distance should be:" << list_i_NodeDist_getIthDist (head, j) << ", saved new distance is: " << i_DistEndSavd << "\n";
+            			}
+            		      else
+            			{
+            			  //    cout <<"\nERROR Updating vertex " << j << ". Old distance:" << list_i_NodeDist_getIthDist (head, j) << ", new distance needs to be: " << i_DistEndSavd << "\n";
+            			}
+        		    }		//otherwise you don't change anything
+        
+        		}
+    	    }
+        }
+        b_AnyStrtVrtxLeft=b_isNotEmpty_list_i_QVertSet(headQ);
+        //cout << "\nIs there an unseen start vertex left? - Answer: " << b_AnyStrtVrtxLeft;
+    }
+
+  cout <<
+    "\n**************************************************************\n\nGRAPH no 1:";
+  //These are the graph parameters used:
+  cout << "\n Used parameters: ";
+  cout << "\n Node count: " << i_NodCnt << ".";
+  cout << "\n Edge density: " << f_EdgDns << ".";
+  cout << "\n Distance range: " << i_DistMin << "..." << i_DistMax << ".";
+  cout << "\n\nDijkstra's shortest path is: " << list_i_NodeDist_getIthDist (head, i_NodCnt -1);
+
+
+}
+
+
+
