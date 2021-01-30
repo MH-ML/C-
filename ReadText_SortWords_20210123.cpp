@@ -28,5 +28,5 @@ int main(){
 	for(auto str : words)
 		cout << str << "\t";
 	cout << endl;
-	
+	 
 }
