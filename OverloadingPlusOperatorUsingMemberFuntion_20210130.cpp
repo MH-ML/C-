@@ -31,7 +31,7 @@ class point{
     // private numbers 
     private:
         //declaration and initialization of x and y:
-        double x=1.1,y=2.2;
+        double x=1.1,y=2.2; 
 };
 
 int main()
