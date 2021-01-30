@@ -30,7 +30,7 @@ int main()
     std::cout << "\nYour vector is:\n";
     for(std::vector<int>::iterator  it=data.begin(); it!=data.end(); ++it){
         std::cout << *it << " "; 
-    }
+    } 
     
     return 0;
 }
